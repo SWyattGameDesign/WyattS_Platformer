@@ -42,15 +42,15 @@ public class PlayerController : MonoBehaviour
 
     private void MovementUpdate(Vector2 playerInput)
     {
-        Vector2 playerVelocity = playerRB.velocity;
+        Vector2 playerVelocity = playerRB.velocity; //Determine the player's initial velocity
 
         if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
         {
-            playerVelocity += accel * Vector2.left * Time.deltaTime;
+            playerVelocity += accel * Vector2.left * Time.deltaTime; //Move left if the left arrow or A is pressed
         }
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
         {
-            playerVelocity += accel * Vector2.right * Time.deltaTime;
+            playerVelocity += accel * Vector2.right * Time.deltaTime; //Move right if the right arrow or D is pressed
         }
 
 
@@ -61,7 +61,14 @@ public class PlayerController : MonoBehaviour
 
     public bool IsWalking()
     {
-        return false;
+        if (playerRB.velocity.x > 0.3f || playerRB.velocity.x < -0.3f)
+        {
+            return true;
+        } else
+        {
+            return false;
+        }
+                    
     }
     public bool IsGrounded()
     {
