@@ -4,6 +4,16 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    //private variables
+    private Rigidbody2D playerRB;
+    private float accel;
+    private float decel;
+
+    //public variables
+    public float maxSpeed;
+    public float accelTime;
+    public float decelTime;
+
     public enum FacingDirection
     {
         left, right
@@ -12,8 +22,13 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        playerRB = GetComponent<Rigidbody2D>(); //set up the Rigidbody2D for functions
+
+        //set up acceleration and deceleration equations
+        decel = maxSpeed / decelTime;
+        accel = maxSpeed / accelTime;
     }
+
 
     // Update is called once per frame
     void Update()
@@ -22,11 +37,26 @@ public class PlayerController : MonoBehaviour
         //manage the actual movement of the character.
         Vector2 playerInput = new Vector2();
         MovementUpdate(playerInput);
+
     }
 
     private void MovementUpdate(Vector2 playerInput)
     {
+        Vector2 playerVelocity = playerRB.velocity;
 
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+        {
+            playerVelocity += accel * Vector2.left * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+        {
+            playerVelocity += accel * Vector2.right * Time.deltaTime;
+        }
+
+
+
+
+        playerRB.velocity = playerVelocity;
     }
 
     public bool IsWalking()
