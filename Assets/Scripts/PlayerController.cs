@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     public float maxSpeed;
     public float accelTime;
     public float decelTime;
+    public LayerMask lM;
 
     public enum FacingDirection
     {
@@ -38,6 +39,10 @@ public class PlayerController : MonoBehaviour
         Vector2 playerInput = new Vector2();
         MovementUpdate(playerInput);
 
+        Vector2 currentPos = transform.position;
+        Vector2 endPos = new Vector2(currentPos.x, currentPos.y - 0.7f);
+        Debug.DrawLine(currentPos, endPos, Color.red);
+
     }
 
     private void MovementUpdate(Vector2 playerInput)
@@ -51,6 +56,9 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
         {
             playerVelocity += accel * Vector2.right * Time.deltaTime; //Move right if the right arrow or D is pressed
+        } if (Input.GetKey(KeyCode.Space))
+        {
+            playerVelocity += accel * Vector2.up * Time.deltaTime;
         }
 
 
@@ -72,7 +80,17 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        return true;
+        Vector2 rayStart = transform.position;
+        Vector2 rayEnd = new Vector2(transform.position.x, transform.position.y - 0.7f);
+        bool hitGround = Physics2D.Raycast(rayStart, rayEnd, 1.1f, lM);
+
+        if (hitGround == true)
+        {
+            return true;
+        } else
+        {
+            return false;
+        }
     }
 
     public FacingDirection GetFacingDirection()
