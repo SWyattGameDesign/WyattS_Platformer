@@ -61,7 +61,7 @@ public class PlayerController : MonoBehaviour
 
     public bool IsWalking()
     {
-        if (playerRB.velocity.x > 0.3f || playerRB.velocity.x < -0.3f)
+        if (Mathf.Abs(playerRB.velocity.x) > 0.1f)
         {
             return true;
         } else
@@ -77,6 +77,12 @@ public class PlayerController : MonoBehaviour
 
     public FacingDirection GetFacingDirection()
     {
-        return FacingDirection.left;
+        if (playerRB.velocity.x > 0.1f)
+        {
+            return FacingDirection.right;
+        } else
+        {
+            return FacingDirection.left;
+        }
     }
 }
