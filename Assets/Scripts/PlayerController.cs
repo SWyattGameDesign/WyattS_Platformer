@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour
     private float decel;
     private float playerGravity;
     private float jumpTimer; //When a jump started
-    private bool isJumping; //flag to check if player is jumping
+    private bool isJumping = false; //flag to check if player is jumping
     private float coyoteFloat; //amount of time since player has been off the ground to compare against coyoteTime
 
     //public variables
@@ -23,11 +23,22 @@ public class PlayerController : MonoBehaviour
     public float terminalSpeed;
     public float coyoteTime;
     public float overlapRadius; //radius of the overlap circle for detecting ground
+    public int health = 10;
 
     public enum FacingDirection
     {
         left, right
     }
+
+    public FacingDirection currentFacingDirection = FacingDirection.right;
+
+    public enum CharacterState
+    {
+        idle, walk, jump, die
+    }
+
+    public CharacterState currentCharacterState = CharacterState.idle;
+    public CharacterState previousCharacterState = CharacterState.idle;
 
     // Start is called before the first frame update
     void Start()
@@ -40,47 +51,93 @@ public class PlayerController : MonoBehaviour
         accel = maxSpeed / accelTime;
     }
 
+    private void Update()
+    {
+        previousCharacterState = currentCharacterState;
+        
 
-    // Update is called once per frame
-    void Update()
+        switch (currentCharacterState)
+        {
+            case CharacterState.die:
+
+                break;
+            case CharacterState.jump:
+                if (IsGrounded())
+                {
+
+                    if (IsWalking())
+                    {
+                        currentCharacterState = CharacterState.walk;
+                    }
+                    else
+                    {
+                        currentCharacterState = CharacterState.idle;
+                    }
+                }
+                break;
+            case CharacterState.walk:
+                //Are we walking
+                if (!IsWalking())
+                {
+                    currentCharacterState = CharacterState.idle;
+                }
+                //Are we jumping
+                if (!IsGrounded())
+                {
+                    currentCharacterState = CharacterState.jump;
+                }
+
+                break;
+            case CharacterState.idle:
+                //Are we walking
+                if (IsWalking())
+                {
+                    currentCharacterState = CharacterState.walk;
+                }
+                //Are we jumping
+                if (!IsGrounded())
+                {
+                    currentCharacterState = CharacterState.jump;
+                }
+                break;
+        }
+            
+    }
+
+
+    private void FixedUpdate()
     {
         //The input from the player needs to be determined and then passed in the to the MovementUpdate which should
         //manage the actual movement of the character.
         Vector2 playerInput = new Vector2();
-        MovementUpdate(playerInput);
 
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            playerInput += Vector2.left;
+        }
+        if(Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        {
+            playerInput += Vector2.right;
+        }
+
+
+        MovementUpdate(playerInput);      
         
-        /* Saving these for later if I need them
-        //setting up lines to represent my raycasts for a better visual indicator while testing.
-        Vector2 currentPos1 = transform.position;
-        Vector2 endPos1 = new Vector2(currentPos1.x, currentPos1.y - 1.1f);
-        Debug.DrawLine(currentPos1, endPos1, Color.red);
-
-        Vector2 currentPos2 = (Vector2)transform.position + (Vector2.left * 0.3f);
-        Vector2 endPos2 = new Vector2(currentPos2.x, currentPos2.y - 1.1f);
-        Debug.DrawLine(currentPos2, endPos2, Color.red);
-
-        Vector2 currentPos3 = (Vector2)transform.position + (Vector2.right * 0.3f);
-        Vector2 endPos3 = new Vector2(currentPos3.x, currentPos3.y - 1.1f);
-        Debug.DrawLine(currentPos3, endPos3, Color.red); */
-        
-        
-
     }
 
     private void MovementUpdate(Vector2 playerInput)
     {
         Vector2 playerVelocity = playerRB.velocity; //Determine the player's initial velocity
 
-        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+        if (playerInput.x != 0)
         {
-            playerVelocity += accel * Vector2.left * Time.deltaTime; //Move left if the left arrow or A is pressed
+            playerVelocity += playerInput * accel * Time.fixedDeltaTime;
         }
-        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+        else
         {
-            playerVelocity += accel * Vector2.right * Time.deltaTime; //Move right if the right arrow or D is pressed
-        } 
-        if ((Input.GetKeyDown(KeyCode.Space) && !isJumping && (coyoteFloat <= coyoteTime || IsGrounded()))) //GetKeyDown rather than just GetKey because we don't want the player to be able to hold the spacebar and fly
+            playerVelocity = new Vector2(0, playerVelocity.y);
+        }
+        if ((Input.GetKey(KeyCode.Space) && !isJumping && (coyoteFloat <= coyoteTime || IsGrounded()))) //GetKeyDown rather than just GetKey because we don't want the player to be able to hold the spacebar and fly
                                                                                                           // Also checks that player hasn't been off the ground without a jump for longer than coyoteTime seconds
         {
             isJumping = true;
@@ -126,26 +183,15 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        //Set up three raycasts, on in the center of the sprite, one on the left, one on the right
-        /*Vector2 rayStart1 = transform.position;
-        Vector2 rayEnd1 = new Vector2(transform.position.x, transform.position.y - 0.7f);
-        bool hitGround1 = Physics2D.Raycast(rayStart1, rayEnd1, 1.1f, lM);
-
-        Vector2 rayStart2 = (Vector2)transform.position + (Vector2.left * 0.3f);
-        Vector2 rayEnd2 = new Vector2(rayStart2.x, rayStart2.y - 0.7f);
-        bool hitGround2 = Physics2D.Raycast(rayStart2, rayEnd2, 1.1f, lM);
-
-        Vector2 rayStart3 = (Vector2)transform.position + (Vector2.right * 0.3f);
-        Vector2 rayEnd3 = new Vector2(rayStart3.x, rayStart3.y - 0.7f);
-        bool hitGround3 = Physics2D.Raycast(rayStart3, rayEnd3, 1.1f, lM);*/
-
         //Set up OverlapCircle
         bool hasGround = Physics2D.OverlapCircle(transform.position, overlapRadius, lM);
+
         coyoteFloat = 0f;
         if (coyoteFloat < coyoteTime)
         {
             coyoteFloat += Time.deltaTime;
         }
+
         if (hasGround)
         {
             return true;
@@ -154,28 +200,27 @@ public class PlayerController : MonoBehaviour
         {
             return false;
         }
+    }
 
+    public bool IsDead()
+    {
+        return health <= 0;
+    }
 
-
-        /*if (hitGround1 == true || hitGround2 == true || hitGround3 == true)
-        {
-            return true;
-        } else
-        {
-            return false;
-        }*/
-
-
+    public void OnDeathAnimationComplete()
+    {
+        gameObject.SetActive(false);
     }
 
     public FacingDirection GetFacingDirection()
     {
-        if (playerRB.velocity.x > 0.1f)
+        if (playerRB.velocity.x > 0f)
         {
-            return FacingDirection.right;
-        } else
+            currentFacingDirection = FacingDirection.right;
+        } else if (playerRB.velocity.x < 0.1f)
         {
-            return FacingDirection.left;
+            currentFacingDirection = FacingDirection.left;
         }
+        return currentFacingDirection;
     }
 }
