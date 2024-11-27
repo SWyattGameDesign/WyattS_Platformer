@@ -1703,6 +1703,7 @@ MonoBehaviour:
   apexTime: 0.2
   terminalSpeed: -5
   coyoteTime: 0.3
+  overlapRadius: 1
 --- !u!4 &1433354315
 Transform:
   m_ObjectHideFlags: 0

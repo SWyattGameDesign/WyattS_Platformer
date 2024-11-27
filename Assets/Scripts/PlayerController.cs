@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
     public float apexTime;
     public float terminalSpeed;
     public float coyoteTime;
+    public float overlapRadius; //radius of the overlap circle for detecting ground
 
     public enum FacingDirection
     {
@@ -62,6 +63,7 @@ public class PlayerController : MonoBehaviour
         Vector2 currentPos3 = (Vector2)transform.position + (Vector2.right * 0.3f);
         Vector2 endPos3 = new Vector2(currentPos3.x, currentPos3.y - 1.1f);
         Debug.DrawLine(currentPos3, endPos3, Color.red); */
+        
         
 
     }
@@ -125,7 +127,7 @@ public class PlayerController : MonoBehaviour
     public bool IsGrounded()
     {
         //Set up three raycasts, on in the center of the sprite, one on the left, one on the right
-        Vector2 rayStart1 = transform.position;
+        /*Vector2 rayStart1 = transform.position;
         Vector2 rayEnd1 = new Vector2(transform.position.x, transform.position.y - 0.7f);
         bool hitGround1 = Physics2D.Raycast(rayStart1, rayEnd1, 1.1f, lM);
 
@@ -135,21 +137,33 @@ public class PlayerController : MonoBehaviour
 
         Vector2 rayStart3 = (Vector2)transform.position + (Vector2.right * 0.3f);
         Vector2 rayEnd3 = new Vector2(rayStart3.x, rayStart3.y - 0.7f);
-        bool hitGround3 = Physics2D.Raycast(rayStart3, rayEnd3, 1.1f, lM);
+        bool hitGround3 = Physics2D.Raycast(rayStart3, rayEnd3, 1.1f, lM);*/
 
+        //Set up OverlapCircle
+        bool hasGround = Physics2D.OverlapCircle(transform.position, overlapRadius, lM);
         coyoteFloat = 0f;
         if (coyoteFloat < coyoteTime)
         {
             coyoteFloat += Time.deltaTime;
         }
+        if (hasGround)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
 
-        if (hitGround1 == true || hitGround2 == true || hitGround3 == true)
+
+
+        /*if (hitGround1 == true || hitGround2 == true || hitGround3 == true)
         {
             return true;
         } else
         {
             return false;
-        }
+        }*/
 
 
     }
