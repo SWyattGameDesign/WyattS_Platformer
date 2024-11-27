@@ -312,7 +312,7 @@ GameObject:
   - component: {fileID: 1054579210}
   - component: {fileID: 1054579209}
   - component: {fileID: 1054579211}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: GroundTilemap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1698,7 +1698,11 @@ MonoBehaviour:
   decelTime: 1
   lM:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 64
+  apexHeight: 0.7
+  apexTime: 0.2
+  terminalSpeed: -5
+  coyoteTime: 0.3
 --- !u!4 &1433354315
 Transform:
   m_ObjectHideFlags: 0
@@ -1790,7 +1794,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 0.5
+  m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -1801,7 +1805,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!1 &1598075209
 GameObject:
   m_ObjectHideFlags: 0
