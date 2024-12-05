@@ -12,6 +12,8 @@ public class PlayerController : MonoBehaviour
     private float jumpTimer; //When a jump started
     private bool isJumping = false; //flag to check if player is jumping
     private float coyoteFloat; //amount of time since player has been off the ground to compare against coyoteTime
+    private float jumpBufferTime = 0.2f; // How much time to buffer the jump input
+    private float jumpBufferCount = 0f;
 
     //public variables
     public float maxSpeed;
@@ -53,9 +55,16 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        previousCharacterState = currentCharacterState;
-        
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpBufferCount = jumpBufferTime;
+        }
+        if (jumpBufferCount > 0)
+        {
+            jumpBufferCount -= Time.deltaTime;
+        }
 
+            previousCharacterState = currentCharacterState;
         switch (currentCharacterState)
         {
             case CharacterState.die:
@@ -101,7 +110,7 @@ public class PlayerController : MonoBehaviour
                 }
                 break;
         }
-            
+
     }
 
 
@@ -115,14 +124,14 @@ public class PlayerController : MonoBehaviour
         {
             playerInput += Vector2.left;
         }
-        if(Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
         {
             playerInput += Vector2.right;
         }
 
 
-        MovementUpdate(playerInput);      
-        
+        MovementUpdate(playerInput);
+
     }
 
     private void MovementUpdate(Vector2 playerInput)
@@ -137,19 +146,16 @@ public class PlayerController : MonoBehaviour
         {
             playerVelocity = new Vector2(0, playerVelocity.y);
         }
-        if ((Input.GetKey(KeyCode.Space) && !isJumping && (coyoteFloat <= coyoteTime || IsGrounded()))) //GetKeyDown rather than just GetKey because we don't want the player to be able to hold the spacebar and fly
-                                                                                                          // Also checks that player hasn't been off the ground without a jump for longer than coyoteTime seconds
+        if (jumpBufferCount > 0 && !isJumping && (coyoteFloat <= coyoteTime || IsGrounded())) //GetKeyDown rather than just GetKey because we don't want the player to be able to hold the spacebar and fly
+                                                                                                            // Also checks that player hasn't been off the ground without a jump for longer than coyoteTime seconds
         {
             isJumping = true;
+            jumpBufferCount = 0f; //reset the jump buffer
             playerRB.gravityScale = 0f; //set gravity to 0 while jumping
             float vertVelocity = (2 * apexHeight) / apexTime; //using the Initial Jump Velocity equation from Week 11's lecture notes.
             playerVelocity = new Vector2(playerVelocity.x, vertVelocity); //Jump
             jumpTimer = Time.time; //start recording the time that the jump has been happening
 
-            if (!IsGrounded())
-            {
-                coyoteFloat = 0f;
-            }
         }
         if (isJumping)
         {
@@ -159,12 +165,17 @@ public class PlayerController : MonoBehaviour
             {
                 isJumping = false;
                 playerRB.gravityScale = playerGravity;
-                               
+
             }
         }
         if (playerRB.velocity.y < 0 && playerRB.velocity.y < terminalSpeed) //if player is falling faster than terminalSpeed, they fall at terminalSpeed instead.
         {
             playerVelocity = new Vector2(playerRB.velocity.x, terminalSpeed);
+            Debug.Log("Player is falling at " + playerVelocity.y);
+        }
+        if (!IsGrounded() && !isJumping)
+        {
+            isJumping = false;
         }
 
         playerRB.velocity = playerVelocity; //return to neutral
@@ -175,18 +186,19 @@ public class PlayerController : MonoBehaviour
         if (Mathf.Abs(playerRB.velocity.x) > 0.1f)
         {
             return true;
-        } else
+        }
+        else
         {
             return false;
         }
-                    
+
     }
     public bool IsGrounded()
     {
+        coyoteFloat = 0f;
         //Set up OverlapCircle
         bool hasGround = Physics2D.OverlapCircle(transform.position, overlapRadius, lM);
 
-        coyoteFloat = 0f;
         if (coyoteFloat < coyoteTime)
         {
             coyoteFloat += Time.deltaTime;
@@ -194,6 +206,7 @@ public class PlayerController : MonoBehaviour
 
         if (hasGround)
         {
+            Debug.Log("Player is Grounded");
             return true;
         }
         else
@@ -217,7 +230,8 @@ public class PlayerController : MonoBehaviour
         if (playerRB.velocity.x > 0f)
         {
             currentFacingDirection = FacingDirection.right;
-        } else if (playerRB.velocity.x < 0.1f)
+        }
+        else if (playerRB.velocity.x < 0f)
         {
             currentFacingDirection = FacingDirection.left;
         }
