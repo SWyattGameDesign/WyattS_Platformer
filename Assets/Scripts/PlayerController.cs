@@ -14,6 +14,9 @@ public class PlayerController : MonoBehaviour
     private float coyoteFloat; //amount of time since player has been off the ground to compare against coyoteTime
     private float jumpBufferTime = 0.2f; // How much time to buffer the jump input
     private float jumpBufferCount = 0f;
+    private bool isDashing; //check if player is dashing
+    private float dashBufferTime = 0.2f; // How much to buffer the dash input
+    private float dashBufferCount = 0f; 
 
     //public variables
     public float maxSpeed;
@@ -26,6 +29,9 @@ public class PlayerController : MonoBehaviour
     public float coyoteTime;
     public float overlapRadius; //radius of the overlap circle for detecting ground
     public int health = 10;
+    public float dashSpeed; //Speed of the dash
+    public float dashDuration; //how long the dash should go on for
+    public float dashTime; //How long the dash has been going
 
     public enum FacingDirection
     {
@@ -60,6 +66,15 @@ public class PlayerController : MonoBehaviour
             jumpBufferCount = jumpBufferTime;
         }
         if (jumpBufferCount > 0)
+        {
+            jumpBufferCount -= Time.deltaTime;
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            dashBufferCount = dashBufferTime;
+        }
+        if (dashBufferCount > 0)
         {
             jumpBufferCount -= Time.deltaTime;
         }
@@ -146,6 +161,30 @@ public class PlayerController : MonoBehaviour
         {
             playerVelocity = new Vector2(0, playerVelocity.y);
         }
+        if (dashBufferCount > 0 && !isDashing)
+        {
+            isDashing = true; //Player has started dashing
+            dashBufferCount = 0f; //Reset Dash buffer
+            dashTime = dashDuration; //start recording the time of the dash
+            playerRB.gravityScale = 0f; //Turn off player gravity
+            playerVelocity = new Vector2((playerVelocity.x * dashSpeed), playerVelocity.y); //Make the player rush
+
+            
+            if (isDashing)
+            {
+                dashTime -= dashDuration;
+
+                if (dashTime <= 0f)
+                {
+                    isDashing = false;
+                    playerRB.gravityScale = playerGravity; //restore the gravity of the player
+                   if (playerVelocity.x > maxSpeed)
+                    {
+                        playerVelocity.x = maxSpeed; //put player back to their normal max speed rather than the dash speed.
+                    }
+                }
+            }
+        }
         if (jumpBufferCount > 0 && !isJumping && (coyoteFloat <= coyoteTime || IsGrounded())) //GetKeyDown rather than just GetKey because we don't want the player to be able to hold the spacebar and fly
                                                                                                             // Also checks that player hasn't been off the ground without a jump for longer than coyoteTime seconds
         {
@@ -159,24 +198,37 @@ public class PlayerController : MonoBehaviour
         }
         if (isJumping)
         {
+
             float timePassed = Time.time - jumpTimer; //record how much time has passed since player started jumping.
+
+            if (Input.GetKeyUp(KeyCode.Space) && timePassed < apexTime)
+            {
+                isJumping = false; //turn off the jumping flag
+                playerRB.gravityScale = playerGravity; //reset gravity
+                if (playerVelocity.y > 0)
+                {
+                    playerVelocity.y *= 0.5f; //reduce player's upward velocity
+                }
+            }
+            
 
             if (timePassed >= apexTime) //if the player's been jumping longer than their apex time, they start to fall
             {
                 isJumping = false;
                 playerRB.gravityScale = playerGravity;
-
+               
             }
         }
         if (playerRB.velocity.y < 0 && playerRB.velocity.y < terminalSpeed) //if player is falling faster than terminalSpeed, they fall at terminalSpeed instead.
         {
-            playerVelocity = new Vector2(playerRB.velocity.x, terminalSpeed);
-            Debug.Log("Player is falling at " + playerVelocity.y);
+            playerVelocity = new Vector2(playerRB.velocity.x, terminalSpeed); //Player falls at terminal speed
+            //Debug.Log("Player is falling at " + playerVelocity.y); //Test to make sure player's downward velocity doesn't exceed terminalSpeed
         }
         if (!IsGrounded() && !isJumping)
         {
             isJumping = false;
         }
+
 
         playerRB.velocity = playerVelocity; //return to neutral
     }
@@ -206,7 +258,7 @@ public class PlayerController : MonoBehaviour
 
         if (hasGround)
         {
-            Debug.Log("Player is Grounded");
+            //Debug.Log("Player is Grounded"); //Check to see if player is grounded (Debug purposes)
             return true;
         }
         else
